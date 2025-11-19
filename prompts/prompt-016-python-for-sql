@@ -12,18 +12,17 @@ python3 run-sql.py
 also create a file called script.sql and put the following changing mid-AppModAssist to the user assigned managed identity you created earlier or leave as is if 
 you were not asked ot create any user assigned managed identity:
 
--- Check if user exists before creating
-IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'mid-AppModAssist')
+# Drop and recreate the managed identity user with correct SID
+sql = """
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = 'mid-AppModAssist')
 BEGIN
-    CREATE USER [mid-AppModAssist] FROM EXTERNAL PROVIDER;
+    DROP USER [mid-AppModAssist];
 END
-GO
 
--- Grant permissions (safe to run multiple times)
+CREATE USER [mid-AppModAssist] FROM EXTERNAL PROVIDER;
 ALTER ROLE db_datareader ADD MEMBER [mid-AppModAssist];
 ALTER ROLE db_datawriter ADD MEMBER [mid-AppModAssist];
-GO
-
+"""
 
 Python file contents:
 
