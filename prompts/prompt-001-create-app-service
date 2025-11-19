@@ -1,3 +1,3 @@
 create the bicep code needed to deploy an app service instance to azure on alow cost development SKU in UKSOUTH.
-create a user assigned managed identity called mid-AppModAssist and assign it to this app service so it can later connect to Azure SQL with this identity 
+create a user assigned managed identity called mid-AppModAssist-[Day-Hour-Minute] (replacing [Day-Hour-Minute] with actual day, month, minute) and assign it to this app service so it can later connect to Azure SQL with this identity 
 
