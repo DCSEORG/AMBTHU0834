@@ -6,3 +6,9 @@ there is a guiding principle to use mechanics to deploy to azure that dont need 
 to leverage Azure CLI login etc will likely be easier than creating secrets and identities across portals/actions.
 
 To speed up the agent when testing new prompts just make a shorter list of prompt names in the prompt-order file and/or create new mini-prompts in your fork so that the agent just executes the work you want to test
+
+To improve prompts when testing new funcitonality in VS CODE you can fix an issue with copilot in the IDE and then ask:
+
+"now write a prompt explaining what you had to do so that when a new GenAI agent creates this solution from scratch it doesnt make this mistake again"
+
+Then just put that new prompt into your original prompt in the repo
