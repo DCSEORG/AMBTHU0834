@@ -12,7 +12,11 @@ sku: {
     capacity: 8
   }
 
-make sure the azureopenai and aisearch resources have lower cased names.
+make sure the azureopenai and aisearch resources have lower cased names to avoid this potential issue:
+
+"Azure OpenAI requires the customSubDomainName property to be lowercase,
+but the Bicep template was generating names with uppercase letters from the uniqueString() function."
+
 
 store the settings for these new resources in a GenAISettings file.
 
