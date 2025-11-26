@@ -1,4 +1,4 @@
-![Header image](https://github.com/DougChisholm/App-Mod-Assist/blob/main/repo-header.png)
+![Header image](https://github.com/DougChisholm/App-Mod-Assist/blob/main/repo-header-booster.png)
 
 # App-Mod-Booster
 A project to show how GitHub coding agent can turn screenshots of legacy apps into working proof-of-concepts for cloud native Azure replacements if the legacy database schema is also provided
