@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Management - AI Assistant</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #5B5FC7;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .chat-header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9fafb;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+
+        .message.user .message-bubble {
+            background: #5B5FC7;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-bubble ul, .message-bubble ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-bubble li {
+            margin: 4px 0;
+        }
+
+        .message-bubble strong {
+            font-weight: 600;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .chat-input-container {
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            font-size: 0.9375rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #5B5FC7;
+        }
+
+        .send-button {
+            background: #5B5FC7;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 24px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .send-button:hover {
+            background: #4B4FB7;
+        }
+
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px 20px;
+        }
+
+        .welcome-message h2 {
+            font-size: 1.125rem;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .welcome-message p {
+            font-size: 0.875rem;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .suggestion {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.8125rem;
+            color: #5B5FC7;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion:hover {
+            background: #5B5FC7;
+            color: white;
+            border-color: #5B5FC7;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>💬 Expense Management AI Assistant</h1>
+            <p>Ask me anything about your expenses!</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h2>Welcome! How can I help you today?</h2>
+                <p>Try asking me about your expenses, approvals, or statistics.</p>
+                <div class="suggestions">
+                    <button class="suggestion" onclick="sendSuggestion('Show me all expenses')">Show all expenses</button>
+                    <button class="suggestion" onclick="sendSuggestion('What are the pending approvals?')">Pending approvals</button>
+                    <button class="suggestion" onclick="sendSuggestion('Show dashboard statistics')">Dashboard stats</button>
+                    <button class="suggestion" onclick="sendSuggestion('What categories are available?')">Categories</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." autocomplete="off">
+            <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        let chatHistory = [];
+        let isFirstMessage = true;
+
+        // API base URL - adjust for your deployment
+        const API_BASE = window.location.origin;
+
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendSuggestion(text) {
+            chatInput.value = text;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Clear welcome message on first message
+            if (isFirstMessage) {
+                chatMessages.innerHTML = '';
+                isFirstMessage = false;
+            }
+
+            // Add user message
+            appendMessage('user', message);
+            chatInput.value = '';
+            sendButton.disabled = true;
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, history: chatHistory })
+                });
+
+                const data = await response.json();
+                hideTypingIndicator();
+
+                if (data.success) {
+                    appendMessage('assistant', data.message);
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'assistant', content: data.message });
+                    
+                    // Limit history to last 10 exchanges
+                    if (chatHistory.length > 20) {
+                        chatHistory = chatHistory.slice(-20);
+                    }
+                } else {
+                    appendMessage('assistant', data.error || 'Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                appendMessage('assistant', 'Sorry, I could not connect to the AI service. Please check your connection and try again.');
+            }
+
+            sendButton.disabled = false;
+            chatInput.focus();
+        }
+
+        function appendMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = formatMessage(content);
+            
+            messageDiv.appendChild(bubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatMessage(text) {
+            // Escape HTML first to prevent XSS
+            let escaped = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Apply markdown-style formatting
+            // Bold
+            escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert numbered lists
+            escaped = escaped.replace(/^(\d+)\.\s+(.*)$/gm, '<li>$2</li>');
+            
+            // Convert bullet lists
+            escaped = escaped.replace(/^[-*]\s+(.*)$/gm, '<li>$1</li>');
+            
+            // Wrap consecutive list items in ul
+            escaped = escaped.replace(/(<li>.*?<\/li>\n?)+/g, '<ul>$&</ul>');
+            
+            // Line breaks
+            escaped = escaped.replace(/\n/g, '<br>');
+            
+            // Clean up extra line breaks inside lists
+            escaped = escaped.replace(/<ul>(.*?)<\/ul>/gs, (match, content) => {
+                return '<ul>' + content.replace(/<br>/g, '') + '</ul>';
+            });
+            
+            return escaped;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Expense Dashboard</h2>
+    <a asp-page="/NewExpense" class="btn btn-primary">+ New Expense</a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value">@Model.Stats.TotalExpenses</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Pending Approvals</div>
+            <div class="stat-value">@Model.Stats.PendingApprovals</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Approved Amount</div>
+            <div class="stat-value">£@Model.Stats.ApprovedAmount.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Approved Count</div>
+            <div class="stat-value">@Model.Stats.ApprovedCount</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Expenses -->
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0">Recent Expenses</h5>
+        <a asp-page="/Expenses" class="btn btn-outline-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var expense in Model.RecentExpenses)
+                    {
+                        <tr>
+                            <td>@expense.ExpenseDate.ToString("dd MMM yyyy")</td>
+                            <td>@expense.UserName</td>
+                            <td>@expense.CategoryName</td>
+                            <td>@expense.FormattedAmount</td>
+                            <td>
+                                <span class="status-badge status-@expense.StatusName?.ToLower()">
+                                    @expense.StatusName
+                                </span>
+                            </td>
+                            <td>@expense.Description</td>
+                        </tr>
+                    }
+                    @if (!Model.RecentExpenses.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No expenses found</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Section -->
+<div class="card mt-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">💬 AI Assistant</h5>
+    </div>
+    <div class="card-body">
+        <div id="chat-container">
+            <div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: white;">
+                <div class="text-muted text-center py-4">
+                    Ask me anything about your expenses!
+                </div>
+            </div>
+            <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="Type your message..." />
+                <button class="btn btn-primary" id="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        let chatHistory = [];
+
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message to UI
+            appendMessage('user', message);
+            chatInput.value = '';
+
+            // Show typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'text-muted mb-2';
+            typingDiv.id = 'typing';
+            typingDiv.innerHTML = '<em>AI is thinking...</em>';
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, history: chatHistory })
+                });
+
+                const data = await response.json();
+                document.getElementById('typing')?.remove();
+
+                if (data.success) {
+                    appendMessage('assistant', data.message);
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'assistant', content: data.message });
+                } else {
+                    appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                document.getElementById('typing')?.remove();
+                appendMessage('assistant', 'Sorry, I could not connect to the AI service.');
+            }
+        }
+
+        function appendMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `mb-3 ${role === 'user' ? 'text-end' : ''}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `d-inline-block p-2 px-3 rounded-3 ${role === 'user' ? 'bg-primary text-white' : 'bg-light'}`;
+            bubble.style.maxWidth = '80%';
+            bubble.style.textAlign = 'left';
+            
+            // Format and escape content
+            bubble.innerHTML = formatMessage(content);
+            
+            messageDiv.appendChild(bubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatMessage(text) {
+            // Escape HTML first
+            let escaped = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Apply markdown-style formatting
+            escaped = escaped
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>')
+                .replace(/^[-*]\s+(.*)$/gm, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+            
+            // Wrap consecutive list items
+            escaped = escaped.replace(/(<li>.*?<\/li>)+/g, '<ul style="margin: 0.5rem 0; padding-left: 1.5rem;">$&</ul>');
+            
+            return escaped;
+        }
+    </script>
+}
