@@ -1,0 +1,56 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+.dotnet/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains IDEs
+.idea/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Node.js (if used for any tooling)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+venv/
+.venv/
+*.egg-info/
+
+# Log files
+*.log
+logs/
+
+# User-specific settings
+appsettings.*.local.json
+
+# Test results
+TestResults/
+
+# Publish output
+publish/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Note: Do NOT exclude *.zip files as app.zip is needed for deployment
+# !app.zip
